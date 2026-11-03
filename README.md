@@ -14,6 +14,7 @@ mvn test -Dspring.profiles.active=h2
 
 | Integrante | Rama | Pruebas |
 |------------|------|---------|
+| luiscucho-oss (Integrante 1) | `feature/specialty-crud-validations` | `testCreateSpecialty`, `testUpdateSpecialty`, `testFindSpecialtyById`, `testCreateSpecialty_InvalidSchedule`, `testCreateSpecialty_InvalidHourRange` |
 
 ### Conflictos resueltos
 
