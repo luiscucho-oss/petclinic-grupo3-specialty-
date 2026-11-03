@@ -1,7 +1,9 @@
 package com.tecsup.petclinic.util;
 
 import com.tecsup.petclinic.dtos.PetDTO;
+import com.tecsup.petclinic.dtos.SpecialtyDTO;
 import com.tecsup.petclinic.entities.Pet;
+import com.tecsup.petclinic.entities.Specialty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,5 +81,64 @@ public class TObjectCreator {
 		pets.add(new Pet(12,"Lucky",2,10, null));
 		pets.add(new Pet(13,"Sly",1,10, null));
 		return pets;
+	}
+
+	// ------------ Specialty ---------------
+
+	public static Specialty getSpecialty() {
+		return new Specialty(1, "radiology", "Farewell", 8, 18);
+	}
+
+	public static Specialty newSpecialty() {
+		return new Specialty(null, "cardiology", "Lima", 9, 17);
+	}
+
+	public static Specialty newSpecialtyCreated() {
+		Specialty specialty = newSpecialty();
+		specialty.setId(1000);
+		return specialty;
+	}
+
+	public static Specialty newSpecialtyForUpdate() {
+		return new Specialty(null, "neurology", "Arequipa", 8, 14);
+	}
+
+	public static Specialty newSpecialtyCreatedForUpdate() {
+		Specialty specialty = newSpecialtyForUpdate();
+		specialty.setId(4000);
+		return specialty;
+	}
+
+	public static Specialty newSpecialtyForDelete() {
+		return new Specialty(null, "oncology", "Cusco", 10, 16);
+	}
+
+	public static Specialty newSpecialtyCreatedForDelete() {
+		Specialty specialty = newSpecialtyForDelete();
+		specialty.setId(2000);
+		return specialty;
+	}
+
+	// h_open >= h_close
+	public static SpecialtyDTO newSpecialtyDTOInvalidSchedule() {
+		return new SpecialtyDTO(null, "cardiology", "Lima", 18, 8);
+	}
+
+	// h_close outside 0-23
+	public static SpecialtyDTO newSpecialtyDTOInvalidHourRange() {
+		return new SpecialtyDTO(null, "cardiology", "Lima", 8, 25);
+	}
+
+	public static List<Specialty> getSpecialtiesForFindByName() {
+		List<Specialty> specialties = new ArrayList<Specialty>();
+		specialties.add(new Specialty(2, "surgery", "Maryland", 8, 12));
+		return specialties;
+	}
+
+	public static List<Specialty> getSpecialtiesForFindByOffice() {
+		List<Specialty> specialties = new ArrayList<Specialty>();
+		specialties.add(new Specialty(1, "radiology", "Farewell", 8, 18));
+		specialties.add(new Specialty(4, "dermatology", "Farewell", 14, 20));
+		return specialties;
 	}
 }
