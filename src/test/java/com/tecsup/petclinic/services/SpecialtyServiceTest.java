@@ -1,3 +1,4 @@
+
 package com.tecsup.petclinic.services;
 
 import com.tecsup.petclinic.dtos.SpecialtyDTO;
@@ -23,169 +24,217 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 public class SpecialtyServiceTest {
 
-	@Autowired
-	private SpecialtyService specialtyService;
+    @Autowired
+    private SpecialtyService specialtyService;
 
-	@Autowired
-	private SpecialtyMapper specialtyMapper;
+    @Autowired
+    private SpecialtyMapper specialtyMapper;
 
-	@MockitoBean
-	private SpecialtyRepository repository;
+    @MockitoBean
+    private SpecialtyRepository repository;
 
-	/**
-	 *
-	 */
-	@Test
-	public void testCreateSpecialty() throws InvalidScheduleException {
+    @Test
+    public void testFindByOffice() {
+        Mockito.when(repository.findByOffice("Farewell"))
+                .thenReturn(TObjectCreator.getSpecialtiesForFindByOffice());
 
-		Specialty newSpecialty = TObjectCreator.newSpecialty();
-		Specialty newSpecialtyCreated = TObjectCreator.newSpecialtyCreated();
+        List<SpecialtyDTO> specialties =
+                specialtyService.findByOffice("Farewell");
 
-		SpecialtyDTO newSpecialtyDTO = this.specialtyMapper.mapToDto(newSpecialty);
+        assertEquals(2, specialties.size());
+        assertEquals("radiology", specialties.get(0).getName());
+        assertEquals("dermatology", specialties.get(1).getName());
+    }
 
-		Mockito.when(this.repository.save(newSpecialty))
-				.thenReturn(newSpecialtyCreated);
+    @Test
+    public void testFindByName() {
+        Mockito.when(repository.findByName("surgery"))
+                .thenReturn(TObjectCreator.getSpecialtiesForFindByName());
 
-		SpecialtyDTO specialtyDTOCreated = this.specialtyService.create(newSpecialtyDTO);
+        List<SpecialtyDTO> specialties =
+                specialtyService.findByName("surgery");
 
-		log.info("Specialty created : {}", specialtyDTOCreated);
+        assertEquals(1, specialties.size());
+        assertEquals("surgery", specialties.get(0).getName());
+    }
 
-		assertNotNull(specialtyDTOCreated.getId());
-		assertEquals(newSpecialtyCreated.getId(), specialtyDTOCreated.getId());
-		assertEquals(newSpecialty.getName(), specialtyDTOCreated.getName());
-		assertEquals(newSpecialty.getOffice(), specialtyDTOCreated.getOffice());
-		assertEquals(newSpecialty.getOpenHour(), specialtyDTOCreated.getOpenHour());
-		assertEquals(newSpecialty.getCloseHour(), specialtyDTOCreated.getCloseHour());
+    @Test
+    public void testDeleteSpecialty() throws SpecialtyNotFoundException {
+        Specialty specialty =
+                TObjectCreator.newSpecialtyCreatedForDelete();
 
-		Mockito.verify(this.repository).save(newSpecialty);
-	}
+        Mockito.when(repository.findById(2000))
+                .thenReturn(Optional.of(specialty));
 
-	/**
-	 *
-	 */
-	@Test
-	public void testUpdateSpecialty() throws InvalidScheduleException {
+        specialtyService.delete(2000);
 
-		String UP_NAME = "neurosurgery";
-		String UP_OFFICE = "Trujillo";
-		int UP_OPEN_HOUR = 10;
-		int UP_CLOSE_HOUR = 20;
+        Mockito.verify(repository).delete(specialty);
+    }
 
-		Specialty newSpecialty = TObjectCreator.newSpecialtyForUpdate();
-		Specialty newSpecialtyCreated = TObjectCreator.newSpecialtyCreatedForUpdate();
+    @Test
+    public void testFindSpecialtyById_NotFound() {
+        Mockito.when(repository.findById(999))
+                .thenReturn(Optional.empty());
 
-		// ------------ Create ---------------
+        assertThrows(
+                SpecialtyNotFoundException.class,
+                () -> specialtyService.findById(999)
+        );
+    }
 
-		Mockito.when(this.repository.save(newSpecialty))
-				.thenReturn(newSpecialtyCreated);
+    /**
+     *
+     */
+    @Test
+    public void testCreateSpecialty() throws InvalidScheduleException {
 
-		SpecialtyDTO specialtyDTOCreated = this.specialtyService.create(this.specialtyMapper.mapToDto(newSpecialty));
-		log.info("Specialty created : {}", specialtyDTOCreated);
+        Specialty newSpecialty = TObjectCreator.newSpecialty();
+        Specialty newSpecialtyCreated = TObjectCreator.newSpecialtyCreated();
 
-		// ------------ Update ---------------
+        SpecialtyDTO newSpecialtyDTO = this.specialtyMapper.mapToDto(newSpecialty);
 
-		// Prepare data for update
-		specialtyDTOCreated.setName(UP_NAME);
-		specialtyDTOCreated.setOffice(UP_OFFICE);
-		specialtyDTOCreated.setOpenHour(UP_OPEN_HOUR);
-		specialtyDTOCreated.setCloseHour(UP_CLOSE_HOUR);
+        Mockito.when(this.repository.save(newSpecialty))
+                .thenReturn(newSpecialtyCreated);
 
-		Specialty specialtyToUpdate = this.specialtyMapper.mapToEntity(specialtyDTOCreated);
+        SpecialtyDTO specialtyDTOCreated = this.specialtyService.create(newSpecialtyDTO);
 
-		Mockito.when(this.repository.save(specialtyToUpdate))
-				.thenReturn(specialtyToUpdate);
+        log.info("Specialty created : {}", specialtyDTOCreated);
 
-		// Execute update
-		SpecialtyDTO specialtyDTOUpdated = this.specialtyService.update(specialtyDTOCreated);
-		log.info("Specialty updated : {}", specialtyDTOUpdated);
+        assertNotNull(specialtyDTOCreated.getId());
+        assertEquals(newSpecialtyCreated.getId(), specialtyDTOCreated.getId());
+        assertEquals(newSpecialty.getName(), specialtyDTOCreated.getName());
+        assertEquals(newSpecialty.getOffice(), specialtyDTOCreated.getOffice());
+        assertEquals(newSpecialty.getOpenHour(), specialtyDTOCreated.getOpenHour());
+        assertEquals(newSpecialty.getCloseHour(), specialtyDTOCreated.getCloseHour());
 
-		//            EXPECTED                     ACTUAL
-		assertEquals(newSpecialtyCreated.getId(), specialtyDTOUpdated.getId());
-		assertEquals(UP_NAME, specialtyDTOUpdated.getName());
-		assertEquals(UP_OFFICE, specialtyDTOUpdated.getOffice());
-		assertEquals(UP_OPEN_HOUR, specialtyDTOUpdated.getOpenHour());
-		assertEquals(UP_CLOSE_HOUR, specialtyDTOUpdated.getCloseHour());
+        Mockito.verify(this.repository).save(newSpecialty);
+    }
 
-		Mockito.verify(this.repository).save(specialtyToUpdate);
-	}
+    /**
+     *
+     */
+    @Test
+    public void testUpdateSpecialty() throws InvalidScheduleException {
 
-	/**
-	 *
-	 */
-	@Test
-	public void testFindSpecialtyById() throws SpecialtyNotFoundException {
+        String UP_NAME = "neurosurgery";
+        String UP_OFFICE = "Trujillo";
+        int UP_OPEN_HOUR = 10;
+        int UP_CLOSE_HOUR = 20;
 
-		Specialty specialtyExpected = TObjectCreator.getSpecialty();
+        Specialty newSpecialty = TObjectCreator.newSpecialtyForUpdate();
+        Specialty newSpecialtyCreated = TObjectCreator.newSpecialtyCreatedForUpdate();
 
-		Mockito.when(this.repository.findById(specialtyExpected.getId()))
-				.thenReturn(Optional.of(specialtyExpected));
+        // ------------ Create ---------------
 
-		SpecialtyDTO specialty = this.specialtyService.findById(specialtyExpected.getId());
+        Mockito.when(this.repository.save(newSpecialty))
+                .thenReturn(newSpecialtyCreated);
 
-		log.info("Specialty found : {}", specialty);
+        SpecialtyDTO specialtyDTOCreated = this.specialtyService.create(this.specialtyMapper.mapToDto(newSpecialty));
+        log.info("Specialty created : {}", specialtyDTOCreated);
 
-		assertEquals(specialtyExpected.getId(), specialty.getId());
-		assertEquals(specialtyExpected.getName(), specialty.getName());
-		assertEquals(specialtyExpected.getOffice(), specialty.getOffice());
-		assertEquals(specialtyExpected.getOpenHour(), specialty.getOpenHour());
-		assertEquals(specialtyExpected.getCloseHour(), specialty.getCloseHour());
+        // ------------ Update ---------------
 
-		Mockito.verify(this.repository).findById(specialtyExpected.getId());
-	}
+        // Prepare data for update
+        specialtyDTOCreated.setName(UP_NAME);
+        specialtyDTOCreated.setOffice(UP_OFFICE);
+        specialtyDTOCreated.setOpenHour(UP_OPEN_HOUR);
+        specialtyDTOCreated.setCloseHour(UP_CLOSE_HOUR);
 
-	/**
-	 * h_open >= h_close must be rejected and nothing must be saved.
-	 */
-	@Test
-	public void testCreateSpecialty_InvalidSchedule() {
+        Specialty specialtyToUpdate = this.specialtyMapper.mapToEntity(specialtyDTOCreated);
 
-		SpecialtyDTO openAfterCloseDTO = TObjectCreator.newSpecialtyDTOInvalidSchedule();
-		SpecialtyDTO sameHoursDTO = SpecialtyDTO.builder()
-				.name("cardiology")
-				.office("Lima")
-				.openHour(9)
-				.closeHour(9)
-				.build();
+        Mockito.when(this.repository.save(specialtyToUpdate))
+                .thenReturn(specialtyToUpdate);
 
-		InvalidScheduleException exception = assertThrows(InvalidScheduleException.class,
-				() -> this.specialtyService.create(openAfterCloseDTO));
+        // Execute update
+        SpecialtyDTO specialtyDTOUpdated = this.specialtyService.update(specialtyDTOCreated);
+        log.info("Specialty updated : {}", specialtyDTOUpdated);
 
-		log.info("Expected error : {}", exception.getMessage());
+        //            EXPECTED                     ACTUAL
+        assertEquals(newSpecialtyCreated.getId(), specialtyDTOUpdated.getId());
+        assertEquals(UP_NAME, specialtyDTOUpdated.getName());
+        assertEquals(UP_OFFICE, specialtyDTOUpdated.getOffice());
+        assertEquals(UP_OPEN_HOUR, specialtyDTOUpdated.getOpenHour());
+        assertEquals(UP_CLOSE_HOUR, specialtyDTOUpdated.getCloseHour());
 
-		assertEquals("Opening hour must be before closing hour", exception.getMessage());
+        Mockito.verify(this.repository).save(specialtyToUpdate);
+    }
 
-		// Boundary: same opening and closing hour is also invalid
-		assertThrows(InvalidScheduleException.class,
-				() -> this.specialtyService.create(sameHoursDTO));
+    /**
+     *
+     */
+    @Test
+    public void testFindSpecialtyById() throws SpecialtyNotFoundException {
 
-		Mockito.verify(this.repository, Mockito.never()).save(Mockito.any());
-	}
+        Specialty specialtyExpected = TObjectCreator.getSpecialty();
 
-	/**
-	 * Hours outside 0-23 must be rejected and nothing must be saved.
-	 */
-	@Test
-	public void testCreateSpecialty_InvalidHourRange() {
+        Mockito.when(this.repository.findById(specialtyExpected.getId()))
+                .thenReturn(Optional.of(specialtyExpected));
 
-		SpecialtyDTO closeHourTooHighDTO = TObjectCreator.newSpecialtyDTOInvalidHourRange();
-		SpecialtyDTO negativeOpenHourDTO = SpecialtyDTO.builder()
-				.name("cardiology")
-				.office("Lima")
-				.openHour(-1)
-				.closeHour(10)
-				.build();
+        SpecialtyDTO specialty = this.specialtyService.findById(specialtyExpected.getId());
 
-		InvalidScheduleException exception = assertThrows(InvalidScheduleException.class,
-				() -> this.specialtyService.create(closeHourTooHighDTO));
+        log.info("Specialty found : {}", specialty);
 
-		log.info("Expected error : {}", exception.getMessage());
+        assertEquals(specialtyExpected.getId(), specialty.getId());
+        assertEquals(specialtyExpected.getName(), specialty.getName());
+        assertEquals(specialtyExpected.getOffice(), specialty.getOffice());
+        assertEquals(specialtyExpected.getOpenHour(), specialty.getOpenHour());
+        assertEquals(specialtyExpected.getCloseHour(), specialty.getCloseHour());
 
-		assertEquals("Hours must be between 0 and 23", exception.getMessage());
+        Mockito.verify(this.repository).findById(specialtyExpected.getId());
+    }
 
-		assertThrows(InvalidScheduleException.class,
-				() -> this.specialtyService.create(negativeOpenHourDTO));
+    /**
+     * h_open >= h_close must be rejected and nothing must be saved.
+     */
+    @Test
+    public void testCreateSpecialty_InvalidSchedule() {
 
-		Mockito.verify(this.repository, Mockito.never()).save(Mockito.any());
-	}
+        SpecialtyDTO openAfterCloseDTO = TObjectCreator.newSpecialtyDTOInvalidSchedule();
+        SpecialtyDTO sameHoursDTO = SpecialtyDTO.builder()
+                .name("cardiology")
+                .office("Lima")
+                .openHour(9)
+                .closeHour(9)
+                .build();
 
+        InvalidScheduleException exception = assertThrows(InvalidScheduleException.class,
+                () -> this.specialtyService.create(openAfterCloseDTO));
+
+        log.info("Expected error : {}", exception.getMessage());
+
+        assertEquals("Opening hour must be before closing hour", exception.getMessage());
+
+        // Boundary: same opening and closing hour is also invalid
+        assertThrows(InvalidScheduleException.class,
+                () -> this.specialtyService.create(sameHoursDTO));
+
+        Mockito.verify(this.repository, Mockito.never()).save(Mockito.any());
+    }
+
+    /**
+     * Hours outside 0-23 must be rejected and nothing must be saved.
+     */
+    @Test
+    public void testCreateSpecialty_InvalidHourRange() {
+
+        SpecialtyDTO closeHourTooHighDTO = TObjectCreator.newSpecialtyDTOInvalidHourRange();
+        SpecialtyDTO negativeOpenHourDTO = SpecialtyDTO.builder()
+                .name("cardiology")
+                .office("Lima")
+                .openHour(-1)
+                .closeHour(10)
+                .build();
+
+        InvalidScheduleException exception = assertThrows(InvalidScheduleException.class,
+                () -> this.specialtyService.create(closeHourTooHighDTO));
+
+        log.info("Expected error : {}", exception.getMessage());
+
+        assertEquals("Hours must be between 0 and 23", exception.getMessage());
+
+        assertThrows(InvalidScheduleException.class,
+                () -> this.specialtyService.create(negativeOpenHourDTO));
+
+        Mockito.verify(this.repository, Mockito.never()).save(Mockito.any());
+    }
 }
